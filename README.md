@@ -66,7 +66,7 @@ Hello, /ROOT
 
 ### `once`
 
-`once` 类型的进程随后运行，用于执行一次性进程
+`once` 类型的配置单元随后运行，用于执行一次性进程
 
 `/etc/minit.d/sample.yml`
 
@@ -81,7 +81,7 @@ command:
 
 ### `daemon`
 
-`daemon` 类型的进程，最后启动，用于执行常驻进程
+`daemon` 类型的配置单元，最后启动，用于执行常驻进程
 
 ```yaml
 kind: daemon
@@ -95,7 +95,7 @@ command:
 
 ### `cron`
 
-`cron` 类型的进程，最后启动，用于按照 cron 表达式，执行命令
+`cron` 类型的配置单元，最后启动，用于按照 cron 表达式，执行命令
 
 ```yaml
 kind: cron
@@ -105,6 +105,31 @@ dir: /work # 指定工作目录
 command:
     - echo
     - cron
+```
+
+### `logrotate`
+
+`logrotate` 类型的配置单元，最后启动
+
+`logrotate` 会在每天凌晨执行以下动作
+
+1. 寻找 `files` 字段指定的，不包含 `YYYY-MM-DD` 标记的文件，进行按日重命名
+2. 按照 `keep` 字段删除过期日
+3. 在 `dir` 目录执行 `command`
+
+```yaml
+kind: logrotate
+name: logrotate-example
+files:
+  - /app/logs/*.log
+  - /app/logs/*/*.log
+  - /app/logs/*/*/*.log
+  - /app/logs/*/*/*/*.log
+keep: 4
+dir: /tmp
+command:
+    - touch
+    - xlog.reopen.txt
 ```
 
 ## 打开/关闭单元

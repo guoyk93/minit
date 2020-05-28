@@ -48,6 +48,12 @@ var (
 				return NewCronRunner(unit.Cron, unit.Dir, unit.Command, logger)
 			},
 		},
+		"logrotate": {
+			Level: RunnerL3,
+			Create: func(unit Unit, logger *Logger) (Runner, error) {
+				return NewLogrotateRunner(unit.Files, unit.Keep, unit.Dir, unit.Command, logger)
+			},
+		},
 	}
 )
 

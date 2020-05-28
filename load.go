@@ -47,6 +47,7 @@ type Unit struct {
 	Group   string   `yaml:"group"`
 	Kind    string   `yaml:"kind"`
 	Cron    string   `yaml:"cron"`
+	Keep    int      `yaml:"keep"`
 	Dir     string   `yaml:"dir"`
 	Files   []string `yaml:"files"`
 	Count   int      `yaml:"count"`
