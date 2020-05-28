@@ -1,5 +1,7 @@
 # minit
 
+[![BMC Donate](https://img.shields.io/badge/BMC-Donate-orange)](https://www.buymeacoffee.com/vFa5wfRq6)
+
 一个用 Go 编写的命令行工具，用以在 Docker 容器内启动多个进程，并支持 Cron 类型的进程
 
 ## 获取镜像
