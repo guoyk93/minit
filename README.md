@@ -125,7 +125,9 @@ files:
   - /app/logs/*/*.log
   - /app/logs/*/*/*.log
   - /app/logs/*/*/*/*.log
-keep: 4
+mode: daily # 默认 daily， 可以设置为 filesize, 以 256 MB 为单元进行分割
+keep: 4 # 保留 4 天，或者 4 个分割文件
+# 完成 rotation 之后要执行的命令
 dir: /tmp
 command:
     - touch

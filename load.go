@@ -43,15 +43,19 @@ func init() {
 }
 
 type Unit struct {
-	Name    string   `yaml:"name"`
-	Group   string   `yaml:"group"`
-	Kind    string   `yaml:"kind"`
-	Cron    string   `yaml:"cron"`
-	Keep    int      `yaml:"keep"`
-	Dir     string   `yaml:"dir"`
-	Files   []string `yaml:"files"`
-	Count   int      `yaml:"count"`
-	Command []string `yaml:"command"`
+	Name  string `yaml:"name"`  // 单元名
+	Group string `yaml:"group"` // 单元分组
+	Kind  string `yaml:"kind"`  // 单元类型
+	Count int    `yaml:"count"` // 单元副本数量
+
+	Dir     string   `yaml:"dir"`     // 所有涉及命令执行的单元，指定命令执行时的当前目录
+	Command []string `yaml:"command"` // 所有涉及命令执行的单元，指定命令执行的内容
+
+	Files []string `yaml:"files"` // render, logrotate, logcollect 单元，通配符指定要处理的文件
+
+	Cron string `yaml:"cron"` // cron 单元, 定时表达式
+	Mode string `yaml:"mode"` // logrotate 单元，模式 daily 或者 size
+	Keep int    `yaml:"keep"` // logrotate 单元，保留天数/份数
 }
 
 func (u Unit) CanonicalName() string {

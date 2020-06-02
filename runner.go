@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 )
 
 type RunnerLevel int
@@ -51,7 +50,7 @@ var (
 		"logrotate": {
 			Level: RunnerL3,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewLogrotateRunner(unit.Files, unit.Keep, unit.Dir, unit.Command, logger)
+				return NewLogrotateRunner(unit.Files, unit.Mode, unit.Keep, unit.Dir, unit.Command, logger)
 			},
 		},
 	}
@@ -101,9 +100,7 @@ func execute(dir string, command []string, logger *Logger) (err error) {
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Dir = dir
 	// 阻止信号传递
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
+	setupCmdSysProcAttr(cmd)
 
 	if outPipe, err = cmd.StdoutPipe(); err != nil {
 		return
