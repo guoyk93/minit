@@ -13,7 +13,7 @@
 使用多阶段 Dockerfile 来从上述镜像地址导入 `minit` 可执行程序
 
 ```dockerfile
-FROM registry.cn-shenzhen.aliyuncs.com/landzero/minit AS minit
+FROM guoyk/minit:1.1.1 AS minit
 
 FROM xxxxxxx
 
