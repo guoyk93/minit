@@ -64,6 +64,17 @@ Hello, {{uppercase .Env.HOME}}
 Hello, /ROOT
 ```
 
+**可用渲染函数**
+
+```text
+uppercase, toUpper 变为大写
+lowercase, toLower 变为小写
+hasPrefix, hasSuffix 检查字符串是否有指定前缀/后缀
+contains 检查字符串是否包含指定内容
+replaceAll 更换字符串中的指定内容
+resolveIPAddr, 将主机名解析为 IP
+```
+
 ### `once`
 
 `once` 类型的配置单元随后运行，用于执行一次性进程
