@@ -65,12 +65,8 @@ type rotationFile struct {
 }
 
 type LogrotateRunner struct {
-	files   []string
-	mode    string
-	keep    int
-	dir     string
-	command []string
-	logger  *Logger
+	Unit
+	logger *Logger
 }
 
 func (l *LogrotateRunner) Run(ctx context.Context) {
@@ -95,7 +91,7 @@ func (l *LogrotateRunner) Run(ctx context.Context) {
 func (l *LogrotateRunner) collectRotationFiles() []*rotationFile {
 	rfs := map[string]*rotationFile{}
 
-	for _, fPat := range l.files {
+	for _, fPat := range l.Files {
 		matches, _ := filepath.Glob(fPat)
 		for _, match := range matches {
 			filename, _ := filepath.Abs(match)
@@ -136,7 +132,7 @@ func (l *LogrotateRunner) rotate() {
 			if !ok {
 				continue
 			}
-			switch l.mode {
+			switch l.Mode {
 			case RotationModeDaily:
 				if RotationMarkDailyPattern.MatchString(mark) {
 					continue
@@ -163,15 +159,15 @@ func (l *LogrotateRunner) rotate() {
 		sort.Strings(marks)
 
 		// 进行数量限制
-		if l.keep > 0 && len(marks) > l.keep {
-			for _, mark := range marks[0 : len(marks)-l.keep] {
+		if l.Keep > 0 && len(marks) > l.Keep {
+			for _, mark := range marks[0 : len(marks)-l.Keep] {
 				_ = os.Remove(rotationMarkAdd(rf.original, mark))
 			}
-			marks = marks[len(marks)-l.keep:]
+			marks = marks[len(marks)-l.Keep:]
 		}
 
 		// 进行轮转
-		switch l.mode {
+		switch l.Mode {
 		case RotationModeDaily:
 			foy := rotationMarkAdd(rf.original, moy)
 			if _, err := os.Stat(foy); err == nil {
@@ -203,21 +199,21 @@ func (l *LogrotateRunner) rotate() {
 			}
 		}
 	}
+
+	if len(l.Command) > 0 {
+		_ = execute(l.ExecuteOptions, l.logger)
+	}
 }
 
-func NewLogrotateRunner(files []string, mode string, keep int, dir string, command []string, logger *Logger) (Runner, error) {
-	switch mode {
+func NewLogrotateRunner(unit Unit, logger *Logger) (Runner, error) {
+	switch unit.Mode {
 	case RotationModeDaily:
 	case RotationModeFilesize:
 	default:
-		return nil, fmt.Errorf("未知的 logrotate 模式: %s", mode)
+		return nil, fmt.Errorf("未知的 logrotate 模式: %s", unit.Mode)
 	}
 	return &LogrotateRunner{
-		files:   files,
-		mode:    mode,
-		keep:    keep,
-		dir:     dir,
-		command: command,
-		logger:  logger,
+		Unit:   unit,
+		logger: logger,
 	}, nil
 }

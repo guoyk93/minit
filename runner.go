@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	"io"
-	"os"
-	"os/exec"
-	"sync"
 )
 
 type RunnerLevel int
@@ -26,31 +22,31 @@ var (
 		"render": {
 			Level: RunnerL1,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewRenderRunner(unit.Files, logger)
+				return NewRenderRunner(unit, logger)
 			},
 		},
 		"once": {
 			Level: RunnerL2,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewOnceRunner(unit.Dir, unit.Command, logger)
+				return NewOnceRunner(unit, logger)
 			},
 		},
 		"daemon": {
 			Level: RunnerL3,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewDaemonRunner(unit.Dir, unit.Command, logger)
+				return NewDaemonRunner(unit, logger)
 			},
 		},
 		"cron": {
 			Level: RunnerL3,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewCronRunner(unit.Cron, unit.Dir, unit.Command, logger)
+				return NewCronRunner(unit, logger)
 			},
 		},
 		"logrotate": {
 			Level: RunnerL3,
 			Create: func(unit Unit, logger *Logger) (Runner, error) {
-				return NewLogrotateRunner(unit.Files, unit.Mode, unit.Keep, unit.Dir, unit.Command, logger)
+				return NewLogrotateRunner(unit, logger)
 			},
 		},
 	}
@@ -58,79 +54,4 @@ var (
 
 type Runner interface {
 	Run(ctx context.Context)
-}
-
-var (
-	childPids                 = map[int]bool{}
-	childPidsLock sync.Locker = &sync.Mutex{}
-)
-
-func addPid(pid int) {
-	childPidsLock.Lock()
-	defer childPidsLock.Unlock()
-	childPids[pid] = true
-}
-
-func removePid(pid int) {
-	childPidsLock.Lock()
-	defer childPidsLock.Unlock()
-	delete(childPids, pid)
-}
-
-func notifyPIDs(sig os.Signal) {
-	childPidsLock.Lock()
-	defer childPidsLock.Unlock()
-	for pid, found := range childPids {
-		if found {
-			if process, _ := os.FindProcess(pid); process != nil {
-				_ = process.Signal(sig)
-			}
-		}
-	}
-}
-
-func execute(dir string, command []string, logger *Logger) (err error) {
-	// 为命令行注入环境变量
-	argv := make([]string, 0, len(command))
-	for _, arg := range command {
-		argv = append(argv, os.ExpandEnv(arg))
-	}
-	// 构建 cmd
-	var outPipe, errPipe io.ReadCloser
-	cmd := exec.Command(argv[0], argv[1:]...)
-	cmd.Dir = dir
-	// 阻止信号传递
-	setupCmdSysProcAttr(cmd)
-
-	if outPipe, err = cmd.StdoutPipe(); err != nil {
-		return
-	}
-	if errPipe, err = cmd.StderrPipe(); err != nil {
-		return
-	}
-
-	// 执行
-	if err = cmd.Start(); err != nil {
-		return
-	}
-
-	// 记录 Pid
-	addPid(cmd.Process.Pid)
-
-	// 串流
-	go logger.StreamOut(outPipe)
-	go logger.StreamErr(errPipe)
-
-	// 等待退出
-	if err = cmd.Wait(); err != nil {
-		logger.Errorf("进程退出: %s", err.Error())
-		err = nil
-	} else {
-		logger.Printf("进程退出")
-	}
-
-	// 移除 Pid
-	removePid(cmd.Process.Pid)
-
-	return
 }

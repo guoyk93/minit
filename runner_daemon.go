@@ -7,9 +7,8 @@ import (
 )
 
 type DaemonRunner struct {
-	dir     string
-	command []string
-	logger  *Logger
+	Unit
+	logger *Logger
 }
 
 func (r *DaemonRunner) Run(ctx context.Context) {
@@ -23,7 +22,7 @@ forLoop:
 		}
 
 		var err error
-		if err = execute(r.dir, r.command, r.logger); err != nil {
+		if err = execute(r.ExecuteOptions, r.logger); err != nil {
 			r.logger.Errorf("启动失败: %s", err.Error())
 		}
 
@@ -44,13 +43,12 @@ forLoop:
 	}
 }
 
-func NewDaemonRunner(dir string, command []string, logger *Logger) (Runner, error) {
-	if len(command) == 0 {
+func NewDaemonRunner(unit Unit, logger *Logger) (Runner, error) {
+	if len(unit.Command) == 0 {
 		return nil, fmt.Errorf("没有指定命令，检查 command 字段")
 	}
 	return &DaemonRunner{
-		dir:     dir,
-		command: command,
-		logger:  logger,
+		Unit:   unit,
+		logger: logger,
 	}, nil
 }

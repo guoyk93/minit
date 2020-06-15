@@ -34,7 +34,7 @@ var (
 )
 
 type RenderRunner struct {
-	files  []string
+	Unit
 	logger *Logger
 }
 
@@ -44,7 +44,7 @@ func (r *RenderRunner) Run(ctx context.Context) {
 
 	env := environ()
 
-	for _, filePattern := range r.files {
+	for _, filePattern := range r.Files {
 		var err error
 		var names []string
 		if names, err = filepath.Glob(filePattern); err != nil {
@@ -78,11 +78,14 @@ func (r *RenderRunner) Run(ctx context.Context) {
 	}
 }
 
-func NewRenderRunner(files []string, logger *Logger) (Runner, error) {
-	if len(files) == 0 {
+func NewRenderRunner(unit Unit, logger *Logger) (Runner, error) {
+	if len(unit.Files) == 0 {
 		return nil, fmt.Errorf("没有指定文件，检查 files 字段")
 	}
-	return &RenderRunner{files: files, logger: logger}, nil
+	return &RenderRunner{
+		Unit:   unit,
+		logger: logger,
+	}, nil
 }
 
 func environ() map[string]string {
