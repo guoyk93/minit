@@ -12,6 +12,13 @@ import (
 	"text/template"
 )
 
+type MapIterateItem struct {
+	Prefix string
+	Suffix string
+	Key    string
+	Val    string
+}
+
 var (
 	renderFuncs = map[string]interface{}{
 		"lowercase":  strings.ToLower,
@@ -22,6 +29,34 @@ var (
 		"hasSuffix":  strings.HasSuffix,
 		"contains":   strings.Contains,
 		"replaceAll": strings.ReplaceAll,
+		"iterateMapWithPrefix": func(env map[string]string, prefix string) (ret []MapIterateItem) {
+			for key, val := range env {
+				if !strings.HasPrefix(key, prefix) {
+					continue
+				}
+				ret = append(ret, MapIterateItem{
+					Prefix: prefix,
+					Suffix: strings.TrimPrefix(key, prefix),
+					Key:    key,
+					Val:    val,
+				})
+			}
+			return
+		},
+		"iterateMapWithSuffix": func(env map[string]string, suffix string) (ret []MapIterateItem) {
+			for key, val := range env {
+				if !strings.HasSuffix(key, suffix) {
+					continue
+				}
+				ret = append(ret, MapIterateItem{
+					Prefix: strings.TrimSuffix(key, suffix),
+					Suffix: suffix,
+					Key:    key,
+					Val:    val,
+				})
+			}
+			return
+		},
 		"resolveIPAddr": func(host string) (ret string, err error) {
 			var addr *net.IPAddr
 			if addr, err = net.ResolveIPAddr("ip4", host); err != nil {
