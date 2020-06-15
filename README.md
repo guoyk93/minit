@@ -6,7 +6,7 @@
 
 ## 获取镜像
 
-`registry.cn-shenzhen.aliyuncs.com/landzero/minit`
+`guoyk93/minit`
 
 ## 使用方法
 
@@ -33,7 +33,7 @@ CMD ["/minit"]
 
 允许使用 `---` 分割在单个 `yaml` 文件中，写入多条配置单元
 
-**当前支持 `render`, `once`, `daemon` 和 `cron` 四种配置单元**
+当前支持以下类型
 
 ### `render`
 
