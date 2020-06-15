@@ -1,5 +1,7 @@
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
+# github.com/guoyk93/tmplfuncs v1.0.1
+github.com/guoyk93/tmplfuncs
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/robfig/cron/v3 v3.0.1

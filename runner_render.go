@@ -4,69 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/guoyk93/tmplfuncs"
 	"io/ioutil"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
-)
-
-type MapIterateItem struct {
-	Prefix string
-	Suffix string
-	Key    string
-	Val    string
-}
-
-var (
-	renderFuncs = map[string]interface{}{
-		"lowercase":  strings.ToLower,
-		"toLower":    strings.ToLower,
-		"uppercase":  strings.ToUpper,
-		"toUpper":    strings.ToUpper,
-		"hasPrefix":  strings.HasPrefix,
-		"hasSuffix":  strings.HasSuffix,
-		"contains":   strings.Contains,
-		"replaceAll": strings.ReplaceAll,
-		"iterateMapWithPrefix": func(env map[string]string, prefix string) (ret []MapIterateItem) {
-			for key, val := range env {
-				if !strings.HasPrefix(key, prefix) {
-					continue
-				}
-				ret = append(ret, MapIterateItem{
-					Prefix: prefix,
-					Suffix: strings.TrimPrefix(key, prefix),
-					Key:    key,
-					Val:    val,
-				})
-			}
-			return
-		},
-		"iterateMapWithSuffix": func(env map[string]string, suffix string) (ret []MapIterateItem) {
-			for key, val := range env {
-				if !strings.HasSuffix(key, suffix) {
-					continue
-				}
-				ret = append(ret, MapIterateItem{
-					Prefix: strings.TrimSuffix(key, suffix),
-					Suffix: suffix,
-					Key:    key,
-					Val:    val,
-				})
-			}
-			return
-		},
-		"split": strings.Split,
-		"resolveIPAddr": func(host string) (ret string, err error) {
-			var addr *net.IPAddr
-			if addr, err = net.ResolveIPAddr("ip4", host); err != nil {
-				return
-			}
-			ret = addr.String()
-			return
-		},
-	}
 )
 
 type RenderRunner struct {
@@ -93,7 +36,7 @@ func (r *RenderRunner) Run(ctx context.Context) {
 				r.logger.Errorf("无法读取文件: %s", name)
 				continue
 			}
-			tmpl := template.New("__main__").Funcs(renderFuncs).Option("missingkey=zero")
+			tmpl := template.New("__main__").Funcs(tmplfuncs.Funcs).Option("missingkey=zero")
 			if tmpl, err = tmpl.Parse(string(buf)); err != nil {
 				r.logger.Errorf("无法解析文件 %s: %s", name, err.Error())
 				continue
