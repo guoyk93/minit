@@ -18,34 +18,50 @@ import (
 // filesize: FILENAME.ROT000000000001.EXT (%012d)
 
 const (
-	LogrotateModeDaily    = "daily"
-	LogrotateModeFilesize = "filesize"
+	RotationModeDaily    = "daily"
+	RotationModeFilesize = "filesize"
 
-	LogrotateDailyCron    = "5 0 * * *"
-	LogrotateFilesizeCron = "@every 1m"
+	RotationCron = "@every 1m"
 
-	LogrotateFilesize = 256 * 1024 * 1024
+	RotationDailyDateLayout = "2006-01-02"
+	RotationFilesize        = 256 * 1024 * 1024
 
-	RotationDateLayout = "2006-01-02"
+	Rot = "ROT"
 )
 
 var (
-	rotationMarkPattern = regexp.MustCompile(`\.ROT(.+)\.`)
+	RotationMarkDailyPattern    = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	RotationMarkFilesizePattern = regexp.MustCompile(`^\d+$`)
 )
 
-func rotationMarkRemove(filename string) string {
-	dir := filepath.Dir(filename)
-	base := filepath.Base(filename)
-	base = rotationMarkPattern.ReplaceAllLiteralString(base, ".")
-	return filepath.Join(dir, base)
+func rotationMarkExtract(filename string) (original string, mark string) {
+	dir, base := filepath.Dir(filename), filepath.Base(filename)
+	bs := strings.Split(base, ".")
+	if len(bs) < 2 {
+		original = filename
+		return
+	}
+	if !strings.HasPrefix(bs[len(bs)-2], Rot) {
+		original = filename
+		return
+	}
+	mark = bs[len(bs)-2][len(Rot):]
+	original = filepath.Join(dir, strings.Join(append(bs[:len(bs)-2], bs[len(bs)-1]), "."))
+	return
 }
 
 func rotationMarkAdd(filename string, mark string) string {
-	dir := filepath.Dir(filename)
-	base := filepath.Base(filename)
-	ext := filepath.Ext(base)
-	base = base[:len(base)-len(ext)] + ".ROT" + mark + ext
-	return filepath.Join(dir, base)
+	dir, base := filepath.Dir(filename), filepath.Base(filename)
+	bs := strings.Split(base, ".")
+	if len(bs) < 2 {
+		return filepath.Join(dir, base+"."+Rot+mark)
+	}
+	return filepath.Join(dir, strings.Join(append(bs[:len(bs)-1], Rot+mark, bs[len(bs)-1]), "."))
+}
+
+type rotationFile struct {
+	original string
+	marks    map[string]bool
 }
 
 type LogrotateRunner struct {
@@ -61,17 +77,8 @@ func (l *LogrotateRunner) Run(ctx context.Context) {
 	l.logger.Printf("控制器启动")
 	defer l.logger.Printf("控制器退出")
 
-	var cronExpr string
-
-	switch l.mode {
-	case LogrotateModeDaily:
-		cronExpr = LogrotateDailyCron
-	case LogrotateModeFilesize:
-		cronExpr = LogrotateFilesizeCron
-	}
-
 	cr := cron.New(cron.WithLogger(cron.PrintfLogger(l.logger)))
-	_, err := cr.AddFunc(cronExpr, func() {
+	_, err := cr.AddFunc(RotationCron, func() {
 		l.logger.Printf("开始日志轮转")
 		defer l.logger.Printf("结束日志轮转")
 		l.rotate()
@@ -85,145 +92,123 @@ func (l *LogrotateRunner) Run(ctx context.Context) {
 	<-cr.Stop().Done()
 }
 
-func (l *LogrotateRunner) rotate() {
-	now := time.Now()
-	// 今天的零点，去掉时区信息
-	bod := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	// 昨天的零点，去掉时区信息
-	boy := bod.Add(-time.Hour * 24)
+func (l *LogrotateRunner) collectRotationFiles() []*rotationFile {
+	rfs := map[string]*rotationFile{}
 
-	// 遍历所有通配符，建立原始文件列表，也就是移除 日期/分段 标记后的原始文件名
-	baseFiles := map[string]bool{}
 	for _, fPat := range l.files {
-		files, _ := filepath.Glob(fPat)
-		for _, file := range files {
-			absFile, _ := filepath.Abs(file)
-			if absFile != "" {
-				baseFiles[rotationMarkRemove(absFile)] = true
+		matches, _ := filepath.Glob(fPat)
+		for _, match := range matches {
+			filename, _ := filepath.Abs(match)
+			if filename != "" {
+				orig, mark := rotationMarkExtract(filename)
+				rf := rfs[orig]
+				if rf == nil {
+					rf = &rotationFile{original: orig, marks: map[string]bool{}}
+					rfs[filename] = rf
+				}
+				if mark != "" {
+					rf.marks[mark] = true
+				}
 			}
 		}
 	}
 
-	// 遍历所有 baseFile，匹配所有已经轮转的文件
-	for baseFile := range baseFiles {
+	ret := make([]*rotationFile, 0, len(rfs))
+	for _, rf := range rfs {
+		ret = append(ret, rf)
+	}
+	return ret
+}
 
-		files, _ := filepath.Glob(rotationMarkAdd(baseFile, "*"))
+func (l *LogrotateRunner) rotate() {
+	now := time.Now()
+	bod := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	boy := bod.Add(-time.Hour * 24)
+	moy := boy.Format(RotationDailyDateLayout)
 
-		switch l.mode {
-		case LogrotateModeDaily:
-			// 按照从小到大排序，尽快暴露出日期最远的文件
-			sort.Sort(sort.StringSlice(files))
-		case LogrotateModeFilesize:
-			// 按照从大到小排序，尽快暴露出编号最大的文件
-			sort.Sort(sort.Reverse(sort.StringSlice(files)))
+	// 遍历所有通配符，建立文件组
+	rfs := l.collectRotationFiles()
+
+	// 遍历所有 rotationFile
+	for _, rf := range rfs {
+		// 删除不符合规则的 ROT 文件
+		for mark, ok := range rf.marks {
+			if !ok {
+				continue
+			}
+			switch l.mode {
+			case RotationModeDaily:
+				if RotationMarkDailyPattern.MatchString(mark) {
+					continue
+				}
+			case RotationModeFilesize:
+				if RotationMarkFilesizePattern.MatchString(mark) {
+					continue
+				}
+			default:
+				continue
+			}
+			rf.marks[mark] = false
+			_ = os.Remove(rotationMarkAdd(rf.original, mark))
 		}
 
-		num := int64(0) // 最大编号
-		rot := false    // 是否已经发现了昨天的日志文件
+		// 排序
+		marks := make([]string, 0, len(rf.marks))
+		for mark, ok := range rf.marks {
+			if !ok {
+				continue
+			}
+			marks = append(marks, mark)
+		}
+		sort.Strings(marks)
 
-		// 遍历所有 baseFile 派生的文件
-		for _, file := range files {
+		// 进行数量限制
+		if l.keep > 0 && len(marks) > l.keep {
+			for _, mark := range marks[0 : len(marks)-l.keep] {
+				_ = os.Remove(rotationMarkAdd(rf.original, mark))
+			}
+			marks = marks[len(marks)-l.keep:]
+		}
 
-			// 寻找 ROT 标记
-			var mark string
-			if subs := rotationMarkPattern.FindStringSubmatch(filepath.Base(file)); len(subs) != 2 {
+		// 进行轮转
+		switch l.mode {
+		case RotationModeDaily:
+			foy := rotationMarkAdd(rf.original, moy)
+			if _, err := os.Stat(foy); err == nil {
+				l.logger.Printf("昨日文件已经存在: %s", rf.original)
+				continue
+			} else if !os.IsNotExist(err) {
+				l.logger.Printf("未知错误: %s: %s", rf.original, err.Error())
+				continue
+			}
+			_ = os.Rename(rf.original, rotationMarkAdd(rf.original, moy))
+		case RotationModeFilesize:
+			if fi, err := os.Stat(rf.original); err != nil {
+				l.logger.Printf("无法检测文件: %s: %s", rf.original, err.Error())
 				continue
 			} else {
-				mark = subs[1]
-			}
-
-			switch l.mode {
-			case LogrotateModeDaily:
-				// 日期模式
-				var date time.Time
-				var err error
-				if date, err = time.Parse(RotationDateLayout, mark); err != nil {
-					l.logger.Errorf("无法进行日期匹配: %s: %s", file, err.Error())
+				if fi.Size() < RotationFilesize {
 					continue
 				}
-				if bod.Sub(date) > time.Hour*24*time.Duration(l.keep) {
-					// 寻找过久的文件，进行删除
-					if err := os.Remove(file); err != nil {
-						l.logger.Errorf("删除文件失败: %s: %s", file, err.Error())
-					} else {
-						l.logger.Printf("删除文件: %s", file)
-					}
-				} else if boy.Sub(date) == 0 {
-					// 如果昨日文件已经生成，则设置标记位
-					rot = true
-					l.logger.Printf("昨日文件已经生成：%s", file)
-				} else {
-					l.logger.Printf("忽略文件: %s", file)
-				}
-			case LogrotateModeFilesize:
-				// 文件大小截断模式
 				var id int64
-				var err error
-				if id, err = strconv.ParseInt(strings.TrimPrefix(mark, "0"), 10, 64); err != nil {
-					l.logger.Errorf("无法进行编号匹配: %s: %s", file, err.Error())
-					continue
-				}
-				if id > num {
-					// 寻找最大编号，因为已经排序，因此第一个编号即是最大编号
-					num = id
-				} else if num-id > int64(l.keep) {
-					// 删除过旧的文件
-					if err := os.Remove(file); err != nil {
-						l.logger.Errorf("删除文件失败: %s: %s", file, err.Error())
-					} else {
-						l.logger.Printf("删除文件: %s", file)
+				if len(marks) > 0 {
+					var err error
+					if id, err = strconv.ParseInt(marks[len(marks)-1], 10, 64); err != nil {
+						l.logger.Printf("无法解析最大编号: %s: %s", rf.original, err.Error())
+						continue
 					}
-				} else {
-					l.logger.Printf("忽略文件: %s", file)
 				}
+				id = id + 1
+				_ = os.Rename(rf.original, rotationMarkAdd(rf.original, fmt.Sprintf("%012d", id)))
 			}
-
-			// 完成对 baseFile 派生文件的处理
-		}
-
-		// 对 baseFile 进行 rotation
-		switch l.mode {
-		case LogrotateModeDaily:
-			// 如果已经出现昨天的日志文件，则不 rotation
-			if !rot {
-				nname := rotationMarkAdd(baseFile, boy.Format(RotationDateLayout))
-				if err := os.Rename(baseFile, nname); err != nil {
-					l.logger.Errorf("无法重命名文件: %s -> %s: %s", baseFile, nname, err.Error())
-					continue
-				} else {
-					l.logger.Printf("已经重命名文件: %s -> %s", baseFile, nname)
-				}
-			}
-		case LogrotateModeFilesize:
-			fi, err := os.Stat(baseFile)
-			if err != nil {
-				l.logger.Errorf("无法检查文件大小: %s: %s", baseFile, err.Error())
-				continue
-			}
-			// 如果 baseFile 文件过大，则进行 rotation
-			if fi.Size() > LogrotateFilesize {
-				nname := rotationMarkAdd(baseFile, fmt.Sprintf("%012d", num+1))
-				if err := os.Rename(baseFile, nname); err != nil {
-					l.logger.Errorf("无法重命名文件: %s -> %s: %s", baseFile, nname, err.Error())
-					continue
-				} else {
-					l.logger.Printf("已经重命名文件: %s -> %s", baseFile, nname)
-				}
-			}
-		}
-
-		// 执行后续命令
-		if err := execute(l.dir, l.command, l.logger); err != nil {
-			l.logger.Errorf("命令启动失败: %s", err.Error())
-			return
 		}
 	}
 }
 
 func NewLogrotateRunner(files []string, mode string, keep int, dir string, command []string, logger *Logger) (Runner, error) {
 	switch mode {
-	case LogrotateModeDaily:
-	case LogrotateModeFilesize:
+	case RotationModeDaily:
+	case RotationModeFilesize:
 	default:
 		return nil, fmt.Errorf("未知的 logrotate 模式: %s", mode)
 	}
