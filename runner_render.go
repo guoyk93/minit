@@ -57,6 +57,7 @@ var (
 			}
 			return
 		},
+		"split": strings.Split,
 		"resolveIPAddr": func(host string) (ret string, err error) {
 			var addr *net.IPAddr
 			if addr, err = net.ResolveIPAddr("ip4", host); err != nil {

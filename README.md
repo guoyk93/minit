@@ -75,6 +75,8 @@ replaceAll 更换字符串中的指定内容
 resolveIPAddr, 将主机名解析为 IP
 ```
 
+更多的函数，查看 `runner_render.go`
+
 ### `once`
 
 `once` 类型的配置单元随后运行，用于执行一次性进程
