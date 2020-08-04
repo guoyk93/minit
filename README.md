@@ -145,6 +145,14 @@ command:
 
 可以为配置单元设置字段 `group`，然后在上述环境变量使用 `@group` ，设置一组单元的开启和关闭。
 
+## 快速退出
+
+默认情况下，即便是没有 L3 类型任务 (`daemon`, `cron`, `logrotate` 等)，`minit` 也会持续运行，以支撑起容器主进程。
+
+如果要在 `initContainers` 中，或者容器外使用 `minit`，可以将环境变量 `MINIT_QUICK_EXIT` 设置为 `true`
+
+此时，如果没有 L3 类型任务，`minit` 会自动退出
+
 ## 许可证
 
 Guo Y.K., MIT License

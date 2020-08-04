@@ -45,6 +45,11 @@ func main() {
 	flag.BoolVar(&optQuickExit, "quick-exit", false, "如果没有 L3 任务（守护进程，定时任务 等），则自动退出")
 	flag.Parse()
 
+	// 环境变量
+	if os.Getenv("MINIT_QUICK_EXIT") == "true" {
+		optQuickExit = true
+	}
+
 	// 确保配置单元目录
 	if err = os.MkdirAll(optUnitDir, 0755); err != nil {
 		return
