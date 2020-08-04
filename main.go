@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	optUnitDir string
-	optLogDir  string
+	optUnitDir   string
+	optLogDir    string
+	optQuickExit bool
 )
 
 var (
@@ -41,6 +42,7 @@ func main() {
 	// 命令行参数
 	flag.StringVar(&optUnitDir, "unit-dir", "/etc/minit.d", "配置单元目录")
 	flag.StringVar(&optLogDir, "log-dir", "/var/log/minit", "日志目录")
+	flag.BoolVar(&optQuickExit, "quick-exit", false, "如果没有 L3 任务（守护进程，定时任务 等），则自动退出")
 	flag.Parse()
 
 	// 确保配置单元目录
@@ -83,7 +85,7 @@ func main() {
 	}
 
 	// 控制器组, L1 是 render (渲染配置文件), L2 是 once (一次性命令), L3 是 daemon 和 cron
-	neoRunners := map[RunnerLevel][]Runner{}
+	runners := map[RunnerLevel][]Runner{}
 
 	// 创建控制器
 	for _, unit := range units {
@@ -105,22 +107,28 @@ func main() {
 			return
 		}
 
-		neoRunners[fac.Level] = append(neoRunners[fac.Level], runner)
+		runners[fac.Level] = append(runners[fac.Level], runner)
 	}
 
 	// 运行 L1 控制器
-	for _, runner := range neoRunners[RunnerL1] {
+	for _, runner := range runners[RunnerL1] {
 		runner.Run(context.Background())
 	}
 	// 运行 L2 控制器
-	for _, runner := range neoRunners[RunnerL2] {
+	for _, runner := range runners[RunnerL2] {
 		runner.Run(context.Background())
 	}
+
+	if len(runners[RunnerL3]) == 0 && optQuickExit {
+		log.Printf("没有 L3 任务")
+		return
+	}
+
 	// 运行 L3 控制器
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 
-	for _, runner := range neoRunners[RunnerL3] {
+	for _, runner := range runners[RunnerL3] {
 		wg.Add(1)
 		go func(runner Runner) {
 			runner.Run(ctx)
