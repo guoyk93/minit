@@ -18,7 +18,8 @@ type LogFile struct {
 	currentFile *os.File
 	currentSize int64
 
-	maxSize int64
+	maxSize  int64
+	maxCount int64
 
 	l sync.Locker
 }
@@ -49,6 +50,10 @@ func (l *LogFile) nextArchiveId() (id int64, err error) {
 	}
 
 	id += 1
+
+	if l.maxCount > 0 && id > l.maxCount {
+		id = 1
+	}
 	return
 }
 
@@ -93,6 +98,9 @@ func (l *LogFile) reallocate() (err error) {
 		return
 	}
 
+	// try remove existed, in case id looped due to maxCount
+	_ = os.Remove(l.archiveFileName(id))
+
 	if err = os.Rename(l.currentFileName(), l.archiveFileName(id)); err != nil {
 		return
 	}
@@ -124,12 +132,13 @@ func (l *LogFile) Close() error {
 	return l.currentFile.Close()
 }
 
-func NewLogFile(dir, name string, maxSize int64) (lf *LogFile, err error) {
+func NewLogFile(dir, name string, maxSize int64, maxCount int64) (lf *LogFile, err error) {
 	lf = &LogFile{
-		dir:     dir,
-		name:    name,
-		maxSize: maxSize,
-		l:       &sync.Mutex{},
+		dir:      dir,
+		name:     name,
+		maxSize:  maxSize,
+		maxCount: maxCount,
+		l:        &sync.Mutex{},
 	}
 	if err = lf.open(); err != nil {
 		return

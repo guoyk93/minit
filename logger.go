@@ -36,10 +36,10 @@ func NewLogger(dir, name, filename string) (logger *Logger, err error) {
 		namePrefix: []byte(" [" + name + "] "),
 	}
 	var outFile, errFile *LogFile
-	if outFile, err = NewLogFile(dir, filename+".out", 64*1024*1024); err != nil {
+	if outFile, err = NewLogFile(dir, filename+".out", 64*1024*1024, 3); err != nil {
 		return
 	}
-	if errFile, err = NewLogFile(dir, filename+".err", 64*1024*1024); err != nil {
+	if errFile, err = NewLogFile(dir, filename+".err", 64*1024*1024, 3); err != nil {
 		return
 	}
 	logger.out = io.MultiWriter(os.Stdout, outFile)

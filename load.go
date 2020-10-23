@@ -17,6 +17,10 @@ const (
 	FilterBlacklist
 )
 
+const (
+	DefaultGroup = "default"
+)
+
 var (
 	filters    = map[string]bool{}
 	filterMode FilterMode
@@ -103,6 +107,11 @@ func LoadFile(fn string) (units []Unit, err error) {
 		unit.Cron = strings.TrimSpace(unit.Cron)
 		unit.Dir = strings.TrimSpace(unit.Dir)
 		unit.Group = strings.TrimSpace(unit.Group)
+
+		// 默认组名
+		if unit.Group == "" {
+			unit.Group = DefaultGroup
+		}
 
 		// 打开关闭
 		switch filterMode {
