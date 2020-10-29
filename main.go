@@ -64,6 +64,11 @@ func main() {
 		return
 	}
 
+	// 资源限制
+	if err = SetupRLimits(); err != nil {
+		return
+	}
+
 	// 载入单元
 	var units []Unit
 	if units, err = LoadDir(optUnitDir); err != nil {

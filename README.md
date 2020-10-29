@@ -153,6 +153,41 @@ command:
 
 此时，如果没有 L3 类型任务，`minit` 会自动退出
 
+## 资源限制
+
+**注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式**
+
+使用环境变量 `MINIT_RLIMIT_XXXX` 来设置容器的资源限制，`unlimited` 代表无限制, `-` 表示不修改
+
+比如:
+
+```
+MINIT_RLIMIT_NOFILE=unlimited       # 同时设置软硬限制为 unlimited
+MINIT_RLIMIT_NOFILE=128:unlimited   # 设置软限制为 128，设置硬限制为 unlimited
+MINIT_RLIMIT_NOFILE=128:-           # 设置软限制为 128，硬限制不变
+MINIT_RLIMIT_NOFILE=-:unlimited     # 软限制不变，硬限制修改为 unlimited
+```
+
+可用的环境变量有:
+
+```
+MINIT_RLIMIT_AS
+MINIT_RLIMIT_CORE
+MINIT_RLIMIT_CPU
+MINIT_RLIMIT_DATA
+MINIT_RLIMIT_FSIZE
+MINIT_RLIMIT_LOCKS
+MINIT_RLIMIT_MEMLOCK
+MINIT_RLIMIT_MSGQUEUE
+MINIT_RLIMIT_NICE
+MINIT_RLIMIT_NOFILE
+MINIT_RLIMIT_NPROC
+MINIT_RLIMIT_RTPRIO
+MINIT_RLIMIT_SIGPENDING
+MINIT_RLIMIT_STACK
+```
+
+
 ## 许可证
 
 Guo Y.K., MIT License
