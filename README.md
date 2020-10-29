@@ -13,7 +13,7 @@
 使用多阶段 Dockerfile 来从上述镜像地址导入 `minit` 可执行程序
 
 ```dockerfile
-FROM guoyk/minit:1.1.1 AS minit
+FROM guoyk/minit:1.2.0 AS minit
 
 FROM xxxxxxx
 
@@ -153,7 +153,7 @@ command:
 
 此时，如果没有 L3 类型任务，`minit` 会自动退出
 
-## 资源限制
+## 资源限制 (ulimit)
 
 **注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式**
 
@@ -187,6 +187,19 @@ MINIT_RLIMIT_SIGPENDING
 MINIT_RLIMIT_STACK
 ```
 
+## 内核参数 (sysctl)
+
+**注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式**
+
+使用环境变量 `MINIT_SYSCTL` 来写入 `sysctl` 配置项，`minit` 会自动写入 `/proc/sys` 目录下对应的参数
+
+使用 `,` 分隔多个值
+
+比如:
+
+```
+MINIT_SYSCTL=vm.max_map_count=262144,vm.swappiness=60
+```
 
 ## 许可证
 

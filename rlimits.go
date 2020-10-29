@@ -60,22 +60,22 @@ func SetupRLimits() (err error) {
 		}
 		var limit syscall.Rlimit
 		if err = syscall.Getrlimit(res, &limit); err != nil {
-			err = fmt.Errorf("failed to get rlimit RLIMIT_%s: %s", name, err.Error())
+			err = fmt.Errorf("无法获取 RLIMIT_%s: %s", name, err.Error())
 			return
 		}
 		log.Printf("获取 RLIMIT_%s=%s:%s", name, formatRLimitValue(limit.Cur), formatRLimitValue(limit.Max))
 		if strings.Contains(val, ":") {
 			splits := strings.Split(val, ":")
 			if len(splits) != 2 {
-				err = fmt.Errorf("invalid limit value %s=%s", key, val)
+				err = fmt.Errorf("无效的环境变量 %s=%s", key, val)
 				return
 			}
 			if err = decodeRLimitValue(&limit.Cur, splits[0]); err != nil {
-				err = fmt.Errorf("invalid limit value %s=%s: %s", key, val, err.Error())
+				err = fmt.Errorf("无效的环境变量 %s=%s: %s", key, val, err.Error())
 				return
 			}
 			if err = decodeRLimitValue(&limit.Max, splits[1]); err != nil {
-				err = fmt.Errorf("invalid limit value %s=%s: %s", key, val, err.Error())
+				err = fmt.Errorf("无效的环境变量 %s=%s: %s", key, val, err.Error())
 				return
 			}
 		} else {
@@ -86,7 +86,7 @@ func SetupRLimits() (err error) {
 		}
 		log.Printf("设置 RLIMIT_%s=%s:%s", name, formatRLimitValue(limit.Cur), formatRLimitValue(limit.Max))
 		if err = syscall.Setrlimit(res, &limit); err != nil {
-			err = fmt.Errorf("failed to set rlimit RLIMIT_%s=%s: %s", name, val, err.Error())
+			err = fmt.Errorf("无法设置 RLIMIT_%s=%s: %s", name, val, err.Error())
 			return
 		}
 	}

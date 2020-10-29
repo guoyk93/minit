@@ -64,6 +64,11 @@ func main() {
 		return
 	}
 
+	// 内核参数
+	if err = SetupSysctl(); err != nil {
+		return
+	}
+
 	// 资源限制
 	if err = SetupRLimits(); err != nil {
 		return
