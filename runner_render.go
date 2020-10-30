@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/guoyk93/tmplfuncs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,7 +35,7 @@ func (r *RenderRunner) Run(ctx context.Context) {
 				r.logger.Errorf("无法读取文件: %s", name)
 				continue
 			}
-			tmpl := template.New("__main__").Funcs(tmplfuncs.Funcs).Option("missingkey=zero")
+			tmpl := template.New("__main__").Funcs(tmplFuncs).Option("missingkey=zero")
 			if tmpl, err = tmpl.Parse(string(buf)); err != nil {
 				r.logger.Errorf("无法解析文件 %s: %s", name, err.Error())
 				continue
