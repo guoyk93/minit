@@ -201,6 +201,12 @@ MINIT_RLIMIT_STACK
 MINIT_SYSCTL=vm.max_map_count=262144,vm.swappiness=60
 ```
 
+## 透明大页 (THP)
+
+**注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式**
+
+使用环境变量 `MINIT_THP` 修改 透明大页配置，可选值为 `never`, `madvise` 和 `always`
+
 ## 许可证
 
 Guo Y.K., MIT License

@@ -74,6 +74,11 @@ func main() {
 		return
 	}
 
+	// 透明大页
+	if err = SetupTHP(); err != nil {
+		return
+	}
+
 	// 载入单元
 	var units []Unit
 	if units, err = LoadDir(optUnitDir); err != nil {
