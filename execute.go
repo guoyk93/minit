@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/guoyk93/minit/pkg/mlog"
 	"io"
 	"os"
 	"os/exec"
@@ -43,7 +44,7 @@ func notifyPIDs(sig os.Signal) {
 	}
 }
 
-func execute(opts ExecuteOptions, logger *Logger) (err error) {
+func execute(opts ExecuteOptions, logger *mlog.Logger) (err error) {
 	argv := make([]string, 0)
 
 	// 构建 argv

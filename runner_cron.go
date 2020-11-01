@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
 	"github.com/robfig/cron/v3"
 )
 
 type CronRunner struct {
 	Unit
-	logger *Logger
+	logger *mlog.Logger
 }
 
 func (r *CronRunner) Run(ctx context.Context) {
@@ -32,7 +33,7 @@ func (r *CronRunner) Run(ctx context.Context) {
 	<-cr.Stop().Done()
 }
 
-func NewCronRunner(unit Unit, logger *Logger) (Runner, error) {
+func NewCronRunner(unit Unit, logger *mlog.Logger) (Runner, error) {
 	if len(unit.Command) == 0 {
 		return nil, fmt.Errorf("没有指定命令，检查 command 字段")
 	}

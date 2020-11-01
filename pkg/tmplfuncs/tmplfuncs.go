@@ -1,4 +1,4 @@
-package main
+package tmplfuncs
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var tmplFuncs = map[string]interface{}{
+var Funcs = map[string]interface{}{
 	// built-in functions
 	"netResolveIPAddr":    net.ResolveIPAddr,
 	"osHostname":          os.Hostname,

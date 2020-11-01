@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
 	"os"
 	"os/signal"
 	"regexp"
@@ -23,15 +24,15 @@ var (
 )
 
 var (
-	log *Logger
+	log *mlog.Logger
 )
 
 func exit(err *error) {
 	if *err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s [%s] 错误退出: %s\n", time.Now().Format(LoggerDateLayout), "minit", (*err).Error())
+		_, _ = fmt.Fprintf(os.Stderr, "%s [%s] 错误退出: %s\n", time.Now().Format(mlog.LoggerDateLayout), "minit", (*err).Error())
 		os.Exit(1)
 	} else {
-		_, _ = fmt.Fprintf(os.Stdout, "%s [%s] 正常退出\n", time.Now().Format(LoggerDateLayout), "minit")
+		_, _ = fmt.Fprintf(os.Stdout, "%s [%s] 正常退出\n", time.Now().Format(mlog.LoggerDateLayout), "minit")
 	}
 }
 
@@ -60,7 +61,7 @@ func main() {
 		return
 	}
 
-	if log, err = NewLogger(optLogDir, "minit", "minit"); err != nil {
+	if log, err = mlog.NewLogger(optLogDir, "minit", "minit"); err != nil {
 		return
 	}
 
@@ -83,6 +84,18 @@ func main() {
 	var units []Unit
 	if units, err = LoadDir(optUnitDir); err != nil {
 		return
+	}
+
+	// 载入环境变量
+	var (
+		envUnit Unit
+		envOK   bool
+	)
+	if envUnit, envOK, err = LoadEnvMain(); err != nil {
+		return
+	}
+	if envOK {
+		units = append(units, envUnit)
 	}
 
 	// 检查单元命名
@@ -115,8 +128,8 @@ func main() {
 			return
 		}
 
-		var logger *Logger
-		if logger, err = NewLogger(optLogDir, unit.CanonicalName(), unit.Name); err != nil {
+		var logger *mlog.Logger
+		if logger, err = mlog.NewLogger(optLogDir, unit.CanonicalName(), unit.Name); err != nil {
 			err = fmt.Errorf("无法为 %s 创建日志: %s", unit.Name, err.Error())
 			return
 		}

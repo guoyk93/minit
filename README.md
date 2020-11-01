@@ -136,6 +136,17 @@ command:
     - xlog.reopen.txt
 ```
 
+## 环境变量创建单元
+
+如果只需要一个主单元，而且懒得写 `YAML` 文件，可以用以下环境变量创建一个主单元
+
+```
+MINIT_MAIN_COMMAND=redis-server /etc/redis.conf
+MINIT_MAIN_NAME=main-program
+MINIT_MAIN_GROUP=super-main
+MINIT_MAIN_ONCE=false
+```
+
 ## 打开/关闭单元
 
 可以通过环境变量，打开/关闭特定的单元

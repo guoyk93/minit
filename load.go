@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/guoyk93/minit/pkg/shellquote"
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -63,6 +65,40 @@ type Unit struct {
 
 func (u Unit) CanonicalName() string {
 	return u.Kind + "/" + u.Name
+}
+
+func LoadEnvMain() (unit Unit, ok bool, err error) {
+	cmd := strings.TrimSpace(os.Getenv("MINIT_MAIN_COMMAND"))
+	if cmd == "" {
+		return
+	}
+	name := strings.TrimSpace(os.Getenv("MINIT_MAIN_NAME"))
+	if name == "" {
+		name = "main"
+	}
+	group := strings.TrimSpace(os.Getenv("MINIT_MAIN_GROUP"))
+	if group == "" {
+		group = DefaultGroup
+	}
+	kind := "daemon"
+	if once, _ := strconv.ParseBool(strings.TrimSpace(os.Getenv("MINIT_MAIN_ONCE"))); once {
+		kind = "once"
+		return
+	}
+	var command []string
+	if command, err = shellquote.Split(cmd); err != nil {
+		return
+	}
+	unit = Unit{
+		Name:  name,
+		Group: group,
+		Kind:  kind,
+		ExecuteOptions: ExecuteOptions{
+			Command: command,
+		},
+	}
+	ok = true
+	return
 }
 
 func LoadDir(dir string) (units []Unit, err error) {

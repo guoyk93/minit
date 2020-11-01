@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
 )
 
 type OnceRunner struct {
 	Unit
-	logger *Logger
+	logger *mlog.Logger
 }
 
 func (r *OnceRunner) Run(ctx context.Context) {
@@ -19,7 +20,7 @@ func (r *OnceRunner) Run(ctx context.Context) {
 	}
 }
 
-func NewOnceRunner(unit Unit, logger *Logger) (Runner, error) {
+func NewOnceRunner(unit Unit, logger *mlog.Logger) (Runner, error) {
 	if len(unit.Command) == 0 {
 		return nil, fmt.Errorf("没有指定命令，检查 command 字段")
 	}

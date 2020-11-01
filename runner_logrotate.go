@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
 	"github.com/robfig/cron/v3"
 	"os"
 	"path/filepath"
@@ -66,7 +67,7 @@ type rotationFile struct {
 
 type LogrotateRunner struct {
 	Unit
-	logger *Logger
+	logger *mlog.Logger
 }
 
 func (l *LogrotateRunner) Run(ctx context.Context) {
@@ -205,7 +206,7 @@ func (l *LogrotateRunner) rotate() {
 	}
 }
 
-func NewLogrotateRunner(unit Unit, logger *Logger) (Runner, error) {
+func NewLogrotateRunner(unit Unit, logger *mlog.Logger) (Runner, error) {
 	switch unit.Mode {
 	case RotationModeDaily:
 	case RotationModeFilesize:

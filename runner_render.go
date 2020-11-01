@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
+	"github.com/guoyk93/minit/pkg/tmplfuncs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,7 +15,7 @@ import (
 
 type RenderRunner struct {
 	Unit
-	logger *Logger
+	logger *mlog.Logger
 }
 
 func (r *RenderRunner) Run(ctx context.Context) {
@@ -35,7 +37,7 @@ func (r *RenderRunner) Run(ctx context.Context) {
 				r.logger.Errorf("无法读取文件: %s", name)
 				continue
 			}
-			tmpl := template.New("__main__").Funcs(tmplFuncs).Option("missingkey=zero")
+			tmpl := template.New("__main__").Funcs(tmplfuncs.Funcs).Option("missingkey=zero")
 			if tmpl, err = tmpl.Parse(string(buf)); err != nil {
 				r.logger.Errorf("无法解析文件 %s: %s", name, err.Error())
 				continue
@@ -56,7 +58,7 @@ func (r *RenderRunner) Run(ctx context.Context) {
 	}
 }
 
-func NewRenderRunner(unit Unit, logger *Logger) (Runner, error) {
+func NewRenderRunner(unit Unit, logger *mlog.Logger) (Runner, error) {
 	if len(unit.Files) == 0 {
 		return nil, fmt.Errorf("没有指定文件，检查 files 字段")
 	}

@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/guoyk93/minit/pkg/mlog"
 	"time"
 )
 
 type DaemonRunner struct {
 	Unit
-	logger *Logger
+	logger *mlog.Logger
 }
 
 func (r *DaemonRunner) Run(ctx context.Context) {
@@ -43,7 +44,7 @@ forLoop:
 	}
 }
 
-func NewDaemonRunner(unit Unit, logger *Logger) (Runner, error) {
+func NewDaemonRunner(unit Unit, logger *mlog.Logger) (Runner, error) {
 	if len(unit.Command) == 0 {
 		return nil, fmt.Errorf("没有指定命令，检查 command 字段")
 	}
