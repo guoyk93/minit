@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/guoyk93/minit/pkg/shellquote"
 	"gopkg.in/yaml.v2"
@@ -67,14 +68,37 @@ func (u Unit) CanonicalName() string {
 	return u.Kind + "/" + u.Name
 }
 
+func LoadArgsMain() (unit Unit, ok bool, err error) {
+	args := flag.Args()
+	for i, arg := range args {
+		if arg == "--" {
+			args = args[i+1:]
+			break
+		}
+	}
+	if len(args) == 0 {
+		return
+	}
+	unit = Unit{
+		Name:  "arg-main",
+		Group: DefaultGroup,
+		Kind:  "daemon",
+		ExecuteOptions: ExecuteOptions{
+			Command: args,
+		},
+	}
+	ok = true
+	return
+}
+
 func LoadEnvMain() (unit Unit, ok bool, err error) {
-	cmd := strings.TrimSpace(os.Getenv("MINIT_MAIN_COMMAND"))
+	cmd := strings.TrimSpace(os.Getenv("MINIT_MAIN"))
 	if cmd == "" {
 		return
 	}
 	name := strings.TrimSpace(os.Getenv("MINIT_MAIN_NAME"))
 	if name == "" {
-		name = "main"
+		name = "env-main"
 	}
 	group := strings.TrimSpace(os.Getenv("MINIT_MAIN_GROUP"))
 	if group == "" {
@@ -95,6 +119,7 @@ func LoadEnvMain() (unit Unit, ok bool, err error) {
 		Kind:  kind,
 		ExecuteOptions: ExecuteOptions{
 			Command: command,
+			Dir:     strings.TrimSpace(os.Getenv("MINIT_MAIN_DIR")),
 		},
 	}
 	ok = true

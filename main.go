@@ -88,14 +88,22 @@ func main() {
 
 	// 载入环境变量
 	var (
-		envUnit Unit
-		envOK   bool
+		extraUnit Unit
+		extraOK   bool
 	)
-	if envUnit, envOK, err = LoadEnvMain(); err != nil {
+	if extraUnit, extraOK, err = LoadEnvMain(); err != nil {
 		return
 	}
-	if envOK {
-		units = append(units, envUnit)
+	if extraOK {
+		units = append(units, extraUnit)
+	}
+
+	// 载入命令参数
+	if extraUnit, extraOK, err = LoadArgsMain(); err != nil {
+		return
+	}
+	if extraOK {
+		units = append(units, extraUnit)
 	}
 
 	// 检查单元命名
