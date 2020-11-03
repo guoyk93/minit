@@ -7,6 +7,9 @@ github.com/robfig/cron/v3
 # github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
+golang.org/x/net/webdav
+golang.org/x/net/webdav/internal/xml
 # golang.org/x/sys v0.0.0-20201029020603-3518587229cd
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix

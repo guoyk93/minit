@@ -80,6 +80,11 @@ func main() {
 		return
 	}
 
+	// WebDAV
+	if err = SetupWebDAV(); err != nil {
+		return
+	}
+
 	// 载入单元
 	var units []Unit
 	if units, err = LoadDir(optUnitDir); err != nil {
