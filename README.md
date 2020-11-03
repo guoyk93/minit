@@ -136,6 +136,23 @@ command:
     - xlog.reopen.txt
 ```
 
+## 使用 `Shell`
+
+上述配置单元的 `command` 数组默认状态下等价于 `argv` 系统调用，如果想要使用基于 `Shell` 的多行命令，使用以下方式
+
+```yaml
+name: demo-for-shell
+kind: once
+# 追加要使用的 shell
+shell: "/bin/bash -eu"
+command:
+  - if [ -n "${HELLO}" ]; then
+  -   echo "world"
+  - fi
+```
+
+支持所有带 `command` 参数的工作单元类型，比如 `once`, `daemon`, `cron`
+
 ## 快速创建单元
 
 **使用环境变量创建单元**

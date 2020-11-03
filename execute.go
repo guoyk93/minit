@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/guoyk93/minit/pkg/mlog"
+	"github.com/guoyk93/minit/pkg/shellquote"
 	"io"
 	"os"
 	"os/exec"
@@ -49,7 +51,10 @@ func execute(opts ExecuteOptions, logger *mlog.Logger) (err error) {
 
 	// 构建 argv
 	if opts.Shell != "" {
-		argv = append(argv, opts.Shell, "-c", strings.Join(opts.Command, " && "))
+		if argv, err = shellquote.Split(opts.Shell); err != nil {
+			err = fmt.Errorf("无法处理 shell 参数，请检查: %s", err.Error())
+			return
+		}
 	} else {
 		for _, arg := range opts.Command {
 			argv = append(argv, os.ExpandEnv(arg))
@@ -59,6 +64,9 @@ func execute(opts ExecuteOptions, logger *mlog.Logger) (err error) {
 	// 构建 cmd
 	var outPipe, errPipe io.ReadCloser
 	cmd := exec.Command(argv[0], argv[1:]...)
+	if opts.Shell != "" {
+		cmd.Stdin = strings.NewReader(strings.Join(opts.Command, "\n"))
+	}
 	cmd.Dir = opts.Dir
 	// 阻止信号传递
 	setupCmdSysProcAttr(cmd)
