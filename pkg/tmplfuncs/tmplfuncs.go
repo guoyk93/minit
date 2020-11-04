@@ -92,7 +92,7 @@ var Funcs = map[string]interface{}{
 		return -v1
 	},
 
-	"k8sStatefulSetID": func(id int, err error) {
+	"k8sStatefulSetID": func() (id int, err error) {
 		var hostname string
 		if hostname = os.Getenv("HOSTNAME"); hostname == "" {
 			if hostname, err = os.Hostname(); err != nil {
