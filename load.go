@@ -57,6 +57,8 @@ type Unit struct {
 	Kind  string `yaml:"kind"`  // 单元类型
 	Count int    `yaml:"count"` // 单元副本数量
 
+	Raw bool `yaml:"raw"` // 不对渲染文件进行空白行处理
+
 	Files []string `yaml:"files"` // render, logrotate, logcollect 单元，通配符指定要处理的文件
 
 	Cron string `yaml:"cron"` // cron 单元, 定时表达式

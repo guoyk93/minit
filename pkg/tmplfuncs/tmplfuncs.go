@@ -41,6 +41,7 @@ var Funcs = map[string]interface{}{
 	"stringsRepeat":       strings.Repeat,
 	"stringsReplaceAll":   strings.ReplaceAll,
 	"stringsSplit":        strings.Split,
+	"stringsSplitN":       strings.SplitN,
 	"stringsToLower":      strings.ToLower,
 	"stringsToUpper":      strings.ToUpper,
 	"stringsTrimPrefix":   strings.TrimPrefix,
@@ -59,22 +60,51 @@ var Funcs = map[string]interface{}{
 	"strconvAoti":         strconv.Atoi,
 	"strconvItoa":         strconv.Itoa,
 
-	// extra functions
-	"k8sStatefulSetID": k8sStatefulSetID,
-}
+	"intAdd": func(v1 int, v2 int) int {
+		return v1 + v2
+	},
 
-func k8sStatefulSetID() (id int64, err error) {
-	var hostname string
-	if hostname = os.Getenv("HOSTNAME"); hostname == "" {
-		if hostname, err = os.Hostname(); err != nil {
+	"intNeg": func(v1 int) int {
+		return -v1
+	},
+
+	"int64Add": func(v1 int64, v2 int64) int64 {
+		return v1 + v2
+	},
+
+	"int64Neg": func(v1 int64) int64 {
+		return -v1
+	},
+
+	"float32Add": func(v1 float32, v2 float32) float32 {
+		return v1 + v2
+	},
+
+	"float32Neg": func(v1 float32) float32 {
+		return -v1
+	},
+
+	"float64Add": func(v1 float64, v2 float64) float64 {
+		return v1 + v2
+	},
+
+	"float64Neg": func(v1 float64) float64 {
+		return -v1
+	},
+
+	"k8sStatefulSetID": func(id int, err error) {
+		var hostname string
+		if hostname = os.Getenv("HOSTNAME"); hostname == "" {
+			if hostname, err = os.Hostname(); err != nil {
+				return
+			}
+		}
+		splits := strings.Split(hostname, "-")
+		if len(splits) < 2 {
+			err = errors.New("invalid stateful-set hostname")
 			return
 		}
-	}
-	splits := strings.Split(hostname, "-")
-	if len(splits) < 2 {
-		err = errors.New("invalid stateful-set hostname")
+		id, err = strconv.Atoi(splits[len(splits)-1])
 		return
-	}
-	id, err = strconv.ParseInt(splits[len(splits)-1], 10, 64)
-	return
+	},
 }

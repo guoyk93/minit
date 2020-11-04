@@ -49,7 +49,11 @@ func (r *RenderRunner) Run(ctx context.Context) {
 				r.logger.Errorf("无法渲染文件 %s: %s", name, err.Error())
 				continue
 			}
-			if err = ioutil.WriteFile(name, out.Bytes(), 0755); err != nil {
+			content := out.Bytes()
+			if !r.Raw {
+				content = sanitize(content)
+			}
+			if err = ioutil.WriteFile(name, content, 0755); err != nil {
 				r.logger.Errorf("无法写入文件 %s: %s", name, err.Error())
 				continue
 			}
@@ -78,4 +82,18 @@ func environ() map[string]string {
 		}
 	}
 	return out
+}
+
+func sanitize(s []byte) []byte {
+	lines := bytes.Split(s, []byte("\n"))
+	out := &bytes.Buffer{}
+	for _, line := range lines {
+		line = bytes.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+		out.Write(line)
+		out.WriteRune('\n')
+	}
+	return out.Bytes()
 }
