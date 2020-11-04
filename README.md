@@ -172,7 +172,7 @@ MINIT_MAIN_ONCE=false
 **使用命令行参数创建单元**
 
 ```
-/opt/bin/minit -- redis-server /etc/redis.conf
+CMD ["/minit", "--", "redis-server", "/etc/redis.conf"]
 ```
 
 ## 打开/关闭单元
@@ -244,7 +244,7 @@ MINIT_SYSCTL=vm.max_map_count=262144,vm.swappiness=60
 
 ## 透明大页 (THP)
 
-**注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式**
+**注意，使用此功能可能需要容器运行在高权限 (Privileged) 模式，并且需要挂载 /sys 目录**
 
 使用环境变量 `MINIT_THP` 修改 透明大页配置，可选值为 `never`, `madvise` 和 `always`
 
@@ -254,11 +254,11 @@ MINIT_SYSCTL=vm.max_map_count=262144,vm.swappiness=60
 
 现在，不再需要这份痛苦了，`minit` 内置 `WebDAV` 服务，你可以像暴露一个标准服务一样暴露出来，省去了调度主机+映射主机目录等一堆烦心事
 
-环境变量 `MINIT_WEBDAV_ROOT` 指定要暴露的路径，`minit` 即会启动一个 `WebDAV` 服务，将指定路径的文件暴露出来
+环境变量:
 
-环境变量 `MINIT_WEBDAV_PORT` 指定 `WebDAV` 服务的端口，默认为 `7486`
-
-环境变量 `MINIT_WEBDAV_USERNAME` 和 `MINIT_WEBDAV_PASSWORD` 指定 `WebDAV` 服务的用户密码，默认不设置用户密码
+* `MINIT_WEBDAV_ROOT` 指定要暴露的路径并启动 WebDAV 服务，比如 `/srv`
+* `MINIT_WEBDAV_PORT` 指定 `WebDAV` 服务的端口，默认为 `7486`
+* `MINIT_WEBDAV_USERNAME` 和 `MINIT_WEBDAV_PASSWORD` 指定 `WebDAV` 服务的用户密码，默认不设置用户密码
 
 ## 许可证
 
