@@ -46,6 +46,18 @@ var Funcs = map[string]interface{}{
 	"stringsTrimPrefix":   strings.TrimPrefix,
 	"stringsTrimSpace":    strings.TrimSpace,
 	"stringsTrimSuffix":   strings.TrimSuffix,
+	"strconvQuote":        strconv.Quote,
+	"strconvUnquote":      strconv.Unquote,
+	"strconvParseBool":    strconv.ParseBool,
+	"strconvParseInt":     strconv.ParseInt,
+	"strconvParseUint":    strconv.ParseUint,
+	"strconvParseFloat":   strconv.ParseFloat,
+	"strconvFormatBool":   strconv.FormatBool,
+	"strconvFormatInt":    strconv.FormatInt,
+	"strconvFormatUint":   strconv.FormatUint,
+	"strconvFormatFloat":  strconv.FormatFloat,
+	"strconvAoti":         strconv.Atoi,
+	"strconvItoa":         strconv.Itoa,
 
 	// extra functions
 	"k8sStatefulSetID": k8sStatefulSetID,
